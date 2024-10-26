@@ -1,6 +1,8 @@
 name: test.sh
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '39 10 16 * *'
   pull_request:
     branches: [main, release/*]
     paths: ['**.sh', '**.yml']
@@ -10,7 +12,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - run: ./test/test.sh
