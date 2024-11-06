@@ -1,7 +1,7 @@
 #!/bin/bash
 # sf6stats.sh
 # MIT License © 2024 Nekorobi
-version=v0.1.0
+version=v0.2.0
 unset mode debug cacheDir yyyymm json  chara rank ranking
 rankList=(rookie iron bronze silver gold platinum diamond master)
 
@@ -14,13 +14,16 @@ Reference: https://www.streetfighter.com/6/buckler/stats/dia
 This script is unofficial.
 
 Options:
+  -c, --chara Type-Chara (e.g. 'C-guile')
+      Specify control type 'C' or 'M', followed by '-' and name (lower case).
+      Use --rank without --chara to list all characters.
+  -r, --rank rookie|iron|bronze|silver|gold|platinum|diamond|master
+      Specify rank.
+  --rm-cache
+      Remove cache data (\$HOME/.cache/sf6stats/ranking/*.json).
   --yyyymm YearMonth (since '202306')
       The stats are updated on the second Thursday of each month.
       Default: Latest stats
-  -r, --rank rookie|iron|bronze|silver|gold|platinum|diamond|master
-      Specify rank name.
-  --rm-cache
-      Remove cache data (\$HOME/.cache/sf6stats/ranking/*.json).
 
   -h, --help     Show help.
   -V, --version  Show version.
@@ -33,11 +36,12 @@ error() { local s=$1; shift 1; echo -e "Error: $@" 1>&2; exit $s; }
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-  --yyyymm|-r|--rank)
+  -c|--chara|-r|--rank|--yyyymm)
                   [[ $# = 1 || $2 =~ ^- ]] && error 1 "$1: requires an argument";;&
-  --yyyymm)       [[ $2 =~ ^20[0-9]{4}$ ]] || error 1 "$1: specify 'YearMonth'. e.g. 202409"; yyyymm=$2; shift 2;;
+  -c|--chara)     [[ $2 =~ ^(C|M)-[a-z]+$ ]] || error 1 "$1: incorrect format: $2"; chara=$2; shift 2;;
   -r|--rank)      [[ $2 =~ ^(rookie|iron|bronze|silver|gold|platinum|diamond|master)$ ]] || error 1 "$1: no such rank: $2"; rank=$2; shift 2;;
   --rm-cache)     mode=rm-cache; shift 1;;
+  --yyyymm)       [[ $2 =~ ^20[0-9]{4}$ ]] || error 1 "$1: incorrect format: $2"; yyyymm=$2; shift 2;;
   --validate)     mode=validate; shift 1;;
   --debug)        debug=on; shift 1;;
   -h|--help)      help; exit 0;;
@@ -157,8 +161,10 @@ json=$cacheDir/$yyyymm.json; log "json: $json"
 validateJson
 if [[ $mode = validate ]]; then exit; fi
 #
-if [[ $rank ]]; then
+if [[ $rank && ! $chara ]]; then
   makeRanking; showRanking
+elif [[ $rank && $chara ]]; then
+  makeRanking; showVsRanking
 else
   selectRank
 fi
