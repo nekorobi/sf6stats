@@ -1,7 +1,7 @@
 #!/bin/bash
 # sf6stats.sh
 # MIT License © 2024 Nekorobi
-version=v0.0.1
+version=v0.1.0
 unset mode debug cacheDir yyyymm json  chara rank ranking
 rankList=(rookie iron bronze silver gold platinum diamond master)
 
@@ -110,6 +110,9 @@ makeRanking() {
   done <<<$lines
   log "ranking.length: ${#ranking[@]}"
 }
+showRanking() {
+  local i=1; for e in "${ranking[@]}"; do printf '%.2d %s\n' $i "$e"; ((i++)); done
+}
 showVsRanking() {
   local records=".diaData.ci.d_sort.\"$(rankIndex)\".records.[]"
   local values="select(.tool_name==\"${chara:2}\" and .input_type==\"${chara:0:1}\") | .values"
@@ -155,7 +158,7 @@ validateJson
 if [[ $mode = validate ]]; then exit; fi
 #
 if [[ $rank ]]; then
-  makeRanking; selectChara
+  makeRanking; showRanking
 else
   selectRank
 fi
