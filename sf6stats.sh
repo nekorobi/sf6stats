@@ -17,6 +17,8 @@ Options:
   --yyyymm YearMonth (since '202306')
       The stats are updated on the second Thursday of each month.
       Default: Latest stats
+  -r, --rank rookie|iron|bronze|silver|gold|platinum|diamond|master
+      Specify rank name.
   --rm-cache
       Remove cache data (\$HOME/.cache/sf6stats/ranking/*.json).
 
@@ -31,8 +33,10 @@ error() { local s=$1; shift 1; echo -e "Error: $@" 1>&2; exit $s; }
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-  --yyyymm)       [[ $# = 1 || $2 =~ ^- ]] && error 1 "$1: requires an argument";;&
+  --yyyymm|-r|--rank)
+                  [[ $# = 1 || $2 =~ ^- ]] && error 1 "$1: requires an argument";;&
   --yyyymm)       [[ $2 =~ ^20[0-9]{4}$ ]] || error 1 "$1: specify 'YearMonth'. e.g. 202409"; yyyymm=$2; shift 2;;
+  -r|--rank)      [[ $2 =~ ^(rookie|iron|bronze|silver|gold|platinum|diamond|master)$ ]] || error 1 "$1: no such rank: $2"; rank=$2; shift 2;;
   --rm-cache)     mode=rm-cache; shift 1;;
   --validate)     mode=validate; shift 1;;
   --debug)        debug=on; shift 1;;
@@ -149,4 +153,9 @@ json=$cacheDir/$yyyymm.json; log "json: $json"
 [[ -f $json ]] || downloadJson
 validateJson
 if [[ $mode = validate ]]; then exit; fi
-selectRank
+#
+if [[ $rank ]]; then
+  makeRanking; selectChara
+else
+  selectRank
+fi
