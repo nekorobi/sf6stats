@@ -100,7 +100,7 @@ rankIndex() {
   done
 }
 makeRanking() {
-  local opponent_header=".diaData.ci.d_sort.\"$(rankIndex)\".opponent_header.[]"
+  local opponent_header=".diaData.ci.d_sort.\"$(rankIndex)\".opponent_header[]"
   local data='.input_type + "-" + .tool_name + " " + (if (._dsort | type) == "number" then ._dsort*100|tostring else "null" end)'
   local lines; lines=$(jq "$opponent_header | $data" "$json" | sed 's/"//g') ||
     error 25 "can not parse JSON: $json"
@@ -118,7 +118,7 @@ showRanking() {
   local i=1; for e in "${ranking[@]}"; do printf '%.2d %s\n' $i "$e"; ((i++)); done
 }
 makeEasyRanking() {
-  local records=".diaData.ci.d_sort.\"$(rankIndex)\".records.[]"
+  local records=".diaData.ci.d_sort.\"$(rankIndex)\".records[]"
   local select="select(.tool_name==\"${chara:2}\" and .input_type==\"${chara:0:1}\") | .values"
   local val; val=$(jq "$records | $select" "$json") || error 26 "can not parse JSON: $json"
   [[ $(jq 'length' <<<$val) = ${#ranking[@]} ]] || error 27 "invalid JSON: $json"
