@@ -2,7 +2,7 @@
 # sf6stats.sh
 # MIT License © 2024 Nekorobi
 version=v0.2.0
-unset mode debug cacheDir yyyymm json  chara rank ranking
+unset mode debug cacheDir yyyymm json  chara rank ranking easyRanking
 rankList=(rookie iron bronze silver gold platinum diamond master)
 
 help() {
@@ -117,22 +117,17 @@ makeRanking() {
 showRanking() {
   local i=1; for e in "${ranking[@]}"; do printf '%.2d %s\n' $i "$e"; ((i++)); done
 }
-showVsRanking() {
+makeEasyRanking() {
   local records=".diaData.ci.d_sort.\"$(rankIndex)\".records.[]"
-  local values="select(.tool_name==\"${chara:2}\" and .input_type==\"${chara:0:1}\") | .values"
-  local lines; lines=$(jq "$records | $values" "$json") || error 26 "can not parse JSON: $json"
-  [[ $(jq 'length' <<<$lines) = ${#ranking[@]} ]] || error 27 "invalid JSON: $json"
-  lines=$(jq ".[].val" <<<$lines | sed 's/"//g')
-  local i=-1 data
-  while read line; do # e.g. 5.600, 10.000, -, -.---
-    ((i++)); [[ $line = - ]] && continue
-    if [[ $line = -.--- ]]; then data+="--     ${ranking[$i]}"
-    else data+="$line% ${ranking[$i]}"; fi
-    data+=$'\n'
-  done <<<$lines
-  echo "[$rank] $chara's win rate (1st column):"
-  sort -n -r <<<$data | sed -r 's/^([0-9])\.([0-9])/\1\2./; s/^10\.000/100.0/'
+  local select="select(.tool_name==\"${chara:2}\" and .input_type==\"${chara:0:1}\") | .values"
+  local val; val=$(jq "$records | $select" "$json") || error 26 "can not parse JSON: $json"
+  [[ $(jq 'length' <<<$val) = ${#ranking[@]} ]] || error 27 "invalid JSON: $json"
+  val=$(jq ".[].val" <<<$val | sed 's/"//g') # e.g. 5.600, 10.000, -, -.---
+  unset easyRanking
+  easyRanking=$(for e in "${ranking[@]%% *}"; do echo $e; done | paste -d '%' <(echo "$val") - |
+    sed -r '/^-%/ d; s/%/% /; s/^([0-9])\.([0-9])/\1\2./; s/^10\.000/100.0/; s/^-\./--/' | sort -n -r)
 }
+charaExists() { for e in "${ranking[@]%% *}"; do [[ $e =~ $chara ]] && return 0; done; return 1; }
 
 selectRank() {
   echo Select: rank
@@ -145,7 +140,12 @@ selectChara() {
   select e in "${ranking[@]}" 'Select: rank'; do [[ $e ]] && break; done
   if [[ $e = 'Select: rank' ]]; then selectRank
   elif [[ $e =~ --$ ]]; then selectChara
-  else chara=${e%% *}; showVsRanking; selectMenu; fi
+  else
+    chara=${e%% *}; makeEasyRanking
+    echo "[$rank] $chara's win rate (1st column):"
+    echo "$easyRanking"; echo
+    selectMenu
+  fi
 }
 selectMenu() {
   select e in 'Select: chara' 'Select: rank'; do [[ $e ]] && break; done
@@ -164,7 +164,8 @@ if [[ $mode = validate ]]; then exit; fi
 if [[ $rank && ! $chara ]]; then
   makeRanking; showRanking
 elif [[ $rank && $chara ]]; then
-  makeRanking; showVsRanking
+  makeRanking; charaExists || error 50 "--chara: no such chara: $chara"
+  makeEasyRanking; echo "$easyRanking"
 else
   selectRank
 fi
