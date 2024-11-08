@@ -1,7 +1,7 @@
 #!/bin/bash
 # sf6stats.sh
 # MIT License © 2024 Nekorobi
-version=v0.3.0
+version=v1.0.0
 unset mode debug cacheDir yyyymm json  chara rank ranking easyRanking
 rank=master  rankList=(rookie iron bronze silver gold platinum diamond master)
 
