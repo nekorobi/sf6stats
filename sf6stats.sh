@@ -11,7 +11,6 @@ Usage: ./sf6stats.sh [Option]...
 
 Show fighting stats of STREET FIGHTER 6.
 Reference: https://www.streetfighter.com/6/buckler/stats/dia
-(Download the JSON to \$HOME/.cache/sf6stats/)
 
 Options:
   -c, --chara Type-Chara (e.g. 'C-guile')
@@ -27,6 +26,9 @@ Options:
 
   -h, --help     Show help.
   -V, --version  Show version.
+
+Cache: \$HOME/.cache/sf6stats/*.json
+Dependent commands: jq, curl or wget
 
 sf6stats.sh $version  https://github.com/nekorobi/sf6stats
 MIT License © 2024 Nekorobi
