@@ -1,9 +1,9 @@
 #!/bin/bash
 # sf6stats.sh
 # MIT License © 2024 Nekorobi
-version=v0.2.0
+version=v0.3.0
 unset mode debug cacheDir yyyymm json  chara rank ranking easyRanking
-rankList=(rookie iron bronze silver gold platinum diamond master)
+rank=master  rankList=(rookie iron bronze silver gold platinum diamond master)
 
 help() {
   cat << END
@@ -17,6 +17,8 @@ Options:
   -c, --chara Type-Chara (e.g. 'C-guile')
       Specify control type 'C' or 'M', followed by '-' and name (lower case).
       Use --rank without --chara to list all characters.
+  -i, --interactive
+      Select rank and chara interactively (Ignore --chara and --rank).
   -r, --rank rookie|iron|bronze|silver|gold|platinum|diamond|master
       Default: master
   --yyyymm YearMonth (since '202306')
@@ -37,6 +39,7 @@ while [[ $# -gt 0 ]]; do
   -c|--chara|-r|--rank|--yyyymm)
                   [[ $# = 1 || $2 =~ ^- ]] && error 1 "$1: requires an argument";;&
   -c|--chara)     [[ $2 =~ ^(C|M)-[a-z]+$ ]] || error 1 "$1: incorrect format: $2"; chara=$2; shift 2;;
+  -i|--interactive) mode=interactive; shift 1;;
   -r|--rank)      [[ $2 =~ ^(rookie|iron|bronze|silver|gold|platinum|diamond|master)$ ]] || error 1 "$1: no such rank: $2"; rank=$2; shift 2;;
   --rm-cache)     mode=rm-cache; shift 1;;
   --yyyymm)       [[ $2 =~ ^20[0-9]{4}$ ]] || error 1 "$1: incorrect format: $2"; yyyymm=$2; shift 2;;
@@ -159,11 +162,11 @@ json=$cacheDir/$yyyymm.json; log "json: $json"
 validateJson
 if [[ $mode = validate ]]; then exit; fi
 #
-if [[ $rank && ! $chara ]]; then
-  makeRanking; showRanking
-elif [[ $rank && $chara ]]; then
+if [[ $mode = interactive ]]; then
+  selectRank
+elif [[ $chara ]]; then
   makeRanking; charaExists || error 50 "--chara: no such chara: $chara"
   makeEasyRanking; echo "$easyRanking"
 else
-  selectRank
+  makeRanking; showRanking
 fi
