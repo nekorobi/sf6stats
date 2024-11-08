@@ -3,8 +3,8 @@ cd ${0%/*}; set -e
 echo test.sh:
 export XDG_CACHE_HOME=$(pwd)/tmp
 
-echo '  --validate:'
-../sf6stats.sh --validate
+echo '  --validate --debug:'
+../sf6stats.sh --validate --debug
 
 echo '  --rank master --yyyymm 202409:'
 result=$(../sf6stats.sh --rank master --yyyymm 202409 | grep C-guile)

@@ -82,7 +82,7 @@ getYyyymm() { # 2nd Friday at the earliest
 }
 downloadJson() {
   local url="https://www.streetfighter.com/6/buckler/api/en/stats/dia/$yyyymm"
-  echo "download: $url"
+  log "download: $url"
   HttpGet "$url" "$json" || { [[ $? = 3 ]] && error 3 'requires curl or wget'; error 11 "can not GET: $url"; }
   jq -e '.diaData | type == "object"' "$json" >/dev/null || { rm "$json"; error 12 "can not GET JSON: $url"; }
 }
